@@ -1,0 +1,114 @@
+---
+title: "Assignment_1"
+author: "shrikunj"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+## R Markdown
+
+
+```{r, echo=TRUE, include=TRUE, results='asis'}
+# Load dataset
+cars_dataset <- read.csv("E:/Project/Masters/BDA/Assignment1/cars_data_10K.csv")
+
+# Check for missing values and remove them
+cars_cleandata <- na.omit(cars_dataset)
+
+# Install necessary packages
+if (!require(outliers)) install.packages("outliers", dependencies = TRUE)
+library(outliers)
+
+if (!require(tinytex)) install.packages("tinytex", dependencies = TRUE)
+library(tinytex)
+
+# Remove outliers in MSRP
+outlier_scores <- scores(cars_cleandata$MSRP, type = "z")
+is_outlier <- outlier_scores > 3 | outlier_scores < -3
+cars_cleandata <- cars_cleandata[!is_outlier, ]
+
+# Convert MSRP to numeric and Vehicle.Size to factor
+cars_cleandata$MSRP <- as.numeric(cars_cleandata$MSRP)
+cars_cleandata$Vehicle.Size <- as.factor(cars_cleandata$Vehicle.Size)
+
+# Display summary of cleaned data
+summary(cars_cleandata)
+
+## **Summary of Variables and Visualizations: Analyzing Car Dataset with Statistical Methods and Plots**
+
+# Pie chart of vehicle sizes
+ slices <- table(cars_cleandata$Vehicle.Size)
+ lbls <- paste(names(slices), "", slices, sep = "") 
+ pie(slices, labels = lbls, main = "Pie Chart of Vehicle Sizes")
+
+# Bar chart of vehicle styles
+ popularity_by_style <- table(cars_cleandata$Vehicle.Style)
+ barplot(popularity_by_style, main = "Bar Chart of Vehicle Style",
+ xlab = "Vehicle Style", ylab = "Popularity", col= "skyblue")
+
+# Histogram of Engine HP
+ hist(cars_cleandata$Engine.HP, main= "Distribution of Engine Horsepower",xlab= "Engine Horsepower", ylab= "Frequency", col="red")
+
+# Scatter plot of Highway MPG vs City MPG
+plot(cars_cleandata$highway.MPG, cars_cleandata$city.mpg, 
+     main = "Highway MPG vs City MPG", xlab = "Highway MPG", ylab = "City MPG", 
+     pch = 19, col = "lightgreen")
+
+## **4(a) Histogram of Car Prices**
+## The histogram provides insights into the distribution of car prices.
+## If the histogram skews right, most cars are budget-friendly with a few luxury models.
+## If the histogram skews left, it suggests that a majority of cars are expensive, with fewer affordable options.
+hist(cars_cleandata$MSRP, main = "Histogram of Car Prices", 
+     xlab = "Price", col = "lightblue", border = "black")
+
+## **4(b) Summary Statistics and Price Grouping**
+## Summary statistics help understand central tendencies and variations in car prices.
+summary(cars_cleandata$MSRP)
+var(cars_cleandata$MSRP)
+
+# Grouping prices into categories
+price_groups <- cut(cars_cleandata$MSRP, breaks = c(0, 10000, 20000, Inf), 
+                    labels = c("Low", "Medium", "High"))
+cars_cleandata$price_group <- price_groups
+aggregate(MSRP ~ price_group, data = cars_cleandata, FUN = summary)
+
+## **4(c) Boxplot of MSRP by Vehicle Style**
+## The boxplot visualizes price variations across different vehicle styles.
+## It helps identify trends in pricing, showing whether luxury and performance cars have a higher MSRP range.
+boxplot(MSRP ~ Vehicle.Style, data = cars_cleandata, 
+        main = "Price by Vehicle Style", xlab = "Vehicle Style", 
+        ylab = "Price", col = "lightgreen")
+
+## **4(d) Correlation Analysis**
+## This analysis helps determine which factors influence car prices the most.
+## High correlations suggest strong relationships between MSRP and variables like engine power and popularity.
+
+# Calculate correlation matrix
+cor_matrix <- cor(cars_cleandata[, c("Year", "Engine.HP", "Engine.Cylinders", 
+                                     "Number.of.Doors", "highway.MPG", "city.mpg", 
+                                     "Popularity", "MSRP")], use = "complete.obs")
+
+# Extract correlation with MSRP
+cor_with_msrp <- cor_matrix[, "MSRP"]
+
+# Sort correlation values
+sorted_cor <- sort(cor_with_msrp, decreasing = TRUE)
+
+# Identify top 3 variables
+top_3_variables <- names(sorted_cor[2:4])  # Exclude MSRP itself
+
+# Print top 3 variables
+cat("Top 3 variables most correlated with MSRP:", top_3_variables, "")
+
+## **How Does the Brand Affect Popularity and Price?**
+## Brands impact car pricing based on reputation, quality, and features.
+
+## - Popular brands like Toyota and Honda attract buyers with affordability and reliability.
+## - Luxury brands such as BMW and Audi command higher prices for premium features and prestige.
+## - Mass-market brands like Ford and Chevrolet cater to a wide range of customers.
+## - Innovative brands like Tesla leverage advanced technology to justify premium pricing.
+
+
